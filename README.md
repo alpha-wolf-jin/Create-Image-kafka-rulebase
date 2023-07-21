@@ -154,20 +154,20 @@ CMD ["bash"]
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 
-192.168.122.51   aap-eda.example.com  kafka-03
+192.168.122.51   aap-eda.example.com  kafka.container.com
 
 ```
 
 
 **Generate Image and Test**
 ```
-[root@aap-eda container-image]# podman build -f context/Containerfile -t kafka-03:latest context
+[root@aap-eda container-image]# podman build -f context/Containerfile -t kafka.container.com:latest context
 ...
 --> 7cc815659cc
-Successfully tagged localhost/kafka-03:latest
+Successfully tagged localhost/kafka.container.com:latest
 7cc815659ccbcd2c94267b9af82d6af8816cc72ad2a219724644c30fd9da3535
 
-[root@aap-eda container-image]# podman run -p 9092:9092 -p 8080:8080 -ti --name kafka-03 --hostname kafka-03  localhost/kafka-03:latest  /bin/bash
+[root@aap-eda container-image]# podman run -p 9092:9092 -p 8080:8080 -ti --name kafka.container.com --hostname kafka.container.com  localhost/kafka.container.com:latest  /bin/bash
 
 bash-5.1$ tmux list-session
 consume: 1 windows (created Fri Jul 21 13:33:38 2023)
