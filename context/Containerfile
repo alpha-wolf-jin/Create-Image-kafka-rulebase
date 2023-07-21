@@ -9,7 +9,7 @@ COPY _kafka /kafka
 COPY _scripts /scripts
 COPY _rpm/tmux-3.2a-4.el9.x86_64.rpm tmux-3.2a-4.el9.x86_64.rpm
 
-RUN chmod -R ug+rw /kafka/
+RUN chmod -R ug+rw /kafka/ /scripts/
 RUN yum install -y java-17-openjdk.x86_64
 RUN yum localinstall -y tmux-3.2a-4.el9.x86_64.rpm
 RUN chmod +x /scripts/start.sh

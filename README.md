@@ -80,7 +80,7 @@ bash: java: command not found
 
 **Open the Firewall on Server**
 ```
-[root@aap-eda Packages]# firewall-cmd --add-port 9092/tcp --permanent
+[root@aap-eda Packages]# firewall-cmd --add-port 9092/tcp --add-port 8080/tcp --permanent
 
 [root@aap-eda Packages]# firewall-cmd --reload
 
@@ -115,9 +115,15 @@ bash: java: command not found
 
 /usr/bin/tmux new-session -d -s consume   '/kafka/bin/kafka-console-consumer.sh --topic aap --from-beginning --bootstrap-server localhost:9092'
 
-/bin/bash
+/usr/bin/sleep 3
+
+/usr/bin/tmux new-session -d -s rulebase '/usr/bin/java -jar /scripts/rules-lab01-1.0.0-SNAPSHOT-runner.jar'
 
 
+[root@aap-eda container-image]# ll context/_scripts/
+total 56024
+-rw-rw-r--. 1 root root 57361254 Apr  6 02:30 rules-lab01-1.0.0-SNAPSHOT-runner.jar
+-rwxr-xr-x. 1 root root      565 Jul 21 21:11 start.sh
 
 [root@aap-eda container-image]# cat context/Containerfile 
 ARG BASE_IMAGE="registry.access.redhat.com/ubi9:9.2-696"

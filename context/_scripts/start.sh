@@ -10,4 +10,8 @@
 
 /usr/bin/tmux new-session -d -s consume   '/kafka/bin/kafka-console-consumer.sh --topic aap --from-beginning --bootstrap-server localhost:9092'
 
+/usr/bin/sleep 3
+
+/usr/bin/tmux new-session -d -s rulebase '/usr/bin/java -jar /scripts/rules-lab01-1.0.0-SNAPSHOT-runner.jar'
+
 /bin/bash
