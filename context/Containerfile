@@ -13,7 +13,7 @@ RUN chmod -R ug+rw /kafka/ /scripts/
 RUN yum install -y java-17-openjdk.x86_64
 RUN yum localinstall -y tmux-3.2a-4.el9.x86_64.rpm
 RUN chmod +x /scripts/start.sh
-RUN rm -f tmux-3.2a-4.el9.x86_64.rpm
+RUN rm -f tmux-3.2a-4.el9.x86_64.rpm ; yum clean all
 
 USER 1000
 ENTRYPOINT ["/scripts/start.sh"]
