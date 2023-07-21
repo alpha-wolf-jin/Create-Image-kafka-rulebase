@@ -1,0 +1,20 @@
+ARG BASE_IMAGE="registry.access.redhat.com/ubi9:9.2-696"
+
+# Base build stage
+FROM $BASE_IMAGE as base
+USER root
+ARG BASE_IMAGE
+
+COPY _kafka /kafka
+COPY _scripts /scripts
+COPY _rpm/tmux-3.2a-4.el9.x86_64.rpm tmux-3.2a-4.el9.x86_64.rpm
+
+RUN chmod -R ug+rw /kafka/
+RUN yum install -y java-17-openjdk.x86_64
+RUN yum localinstall -y tmux-3.2a-4.el9.x86_64.rpm
+RUN chmod +x /scripts/start.sh
+RUN rm -f tmux-3.2a-4.el9.x86_64.rpm
+
+USER 1000
+ENTRYPOINT ["/scripts/start.sh"]
+CMD ["bash"]

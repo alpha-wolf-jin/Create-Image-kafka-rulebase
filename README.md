@@ -87,4 +87,104 @@ bash: java: command not found
 [root@aap-eda Packages]# firewall-cmd --list-all
 ```
 
+**Sent Event**
+```
+[jinzha@event-ansible troubleshoot-01]$ echo '{"implement": "RuleBase", "init": "True"}' | sed "s/'/\"/g" | ~/kafka_2.13-3.3.1/bin/kafka-console-producer.sh --broker-list 192.168.122.51:9092 --topic aap 
+```
 
+**Prepare docker file**
+```
+[root@aap-eda container-image]# mkdir context
+[root@aap-eda container-image]# mkdir context
+[root@aap-eda container-image]# mkdir context/_rpm
+[root@aap-eda container-image]# mkdir context/_kafka
+[root@aap-eda container-image]# mkdir context/_scripts
+[root@aap-eda container-image]# scp -rp root@192.168.122.33:/root/kafka_2.13-3.3.1/* context/_kafka/.
+[root@aap-eda container-image]# cp /root/ansi/decision-environment/context/_rpm/tmux-3.2a-4.el9.x86_64.rpm context/_rpm/.
+
+[root@aap-eda container-image]# cat context/_scripts/start.sh 
+#!/bin/bash
+
+/usr/bin/tmux new-session -d -s zookeeper '/kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties'
+
+/usr/bin/sleep 12
+
+/usr/bin/tmux new-session -d -s kafka     '/kafka/bin/kafka-server-start.sh     /kafka/config/server.properties'
+
+/usr/bin/sleep 10
+
+/usr/bin/tmux new-session -d -s consume   '/kafka/bin/kafka-console-consumer.sh --topic aap --from-beginning --bootstrap-server localhost:9092'
+
+/bin/bash
+
+
+
+[root@aap-eda container-image]# cat context/Containerfile 
+ARG BASE_IMAGE="registry.access.redhat.com/ubi9:9.2-696"
+
+# Base build stage
+FROM $BASE_IMAGE as base
+USER root
+ARG BASE_IMAGE
+
+COPY _kafka /kafka
+COPY _scripts /scripts
+COPY _rpm/tmux-3.2a-4.el9.x86_64.rpm tmux-3.2a-4.el9.x86_64.rpm
+
+RUN chmod -R ug+rw /kafka/
+RUN yum install -y java-17-openjdk.x86_64
+RUN yum localinstall -y tmux-3.2a-4.el9.x86_64.rpm
+RUN chmod +x /scripts/start.sh
+RUN rm -f tmux-3.2a-4.el9.x86_64.rpm
+
+USER 1000
+ENTRYPOINT ["/scripts/start.sh"]
+CMD ["bash"]
+```
+
+**Add container Host IP into /etc/hosts on related servers**
+```
+# cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+192.168.122.51   aap-eda.example.com  kafka-03
+
+```
+
+
+**Generate Image and Test**
+```
+[root@aap-eda container-image]# podman build -f context/Containerfile -t kafka-03:latest context
+...
+--> 7cc815659cc
+Successfully tagged localhost/kafka-03:latest
+7cc815659ccbcd2c94267b9af82d6af8816cc72ad2a219724644c30fd9da3535
+
+[root@aap-eda container-image]# podman run -p 9092:9092 -ti --name kafka-03 --hostname kafka-03  localhost/kafka-03:latest  /bin/bash
+
+bash-5.1$ tmux list-session
+consume: 1 windows (created Fri Jul 21 12:48:54 2023)
+kafka: 1 windows (created Fri Jul 21 12:48:44 2023)
+zookeeper: 1 windows (created Fri Jul 21 12:48:32 2023)
+
+bash-5.1$ tmux attach -t consume
+[2023-07-21 12:51:10,584] WARN [Consumer clientId=console-consumer, groupId=console-consumer-89369] Error while fetching metadata with correlation id 2 : {aap=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
+[2023-07-21 12:51:10,758] WARN [Consumer clientId=console-consumer, groupId=console-consumer-89369] Error while fetching metadata with correlation id 4 : {aap=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
+
+
+```
+
+**Send Event to the topic aap**
+```
+[jinzha@event-ansible troubleshoot-01]$ echo '{"implement": "RuleBase", "init": "True"}' | sed "s/'/\"/g" | ~/kafka_2.13-3.3.1/bin/kafka-console-producer.sh --broker-list 192.168.122.51:9092 --topic aap 
+
+[jinzha@event-ansible troubleshoot-01]$ 
+```
+
+**On the consume side inside the container**
+```
+[2023-07-21 12:51:10,584] WARN [Consumer clientId=console-consumer, groupId=console-consumer-89369] Error while fetching metadata with correlation id 2 : {aap=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
+[2023-07-21 12:51:10,758] WARN [Consumer clientId=console-consumer, groupId=console-consumer-89369] Error while fetching metadata with correlation id 4 : {aap=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
+{"implement": "RuleBase", "init": "True"}
+```
