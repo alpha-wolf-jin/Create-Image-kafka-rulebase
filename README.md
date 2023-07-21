@@ -87,10 +87,6 @@ bash: java: command not found
 [root@aap-eda Packages]# firewall-cmd --list-all
 ```
 
-**Sent Event**
-```
-[jinzha@event-ansible troubleshoot-01]$ echo '{"implement": "RuleBase", "init": "True"}' | sed "s/'/\"/g" | ~/kafka_2.13-3.3.1/bin/kafka-console-producer.sh --broker-list 192.168.122.51:9092 --topic aap 
-```
 
 **Prepare docker file**
 ```
@@ -161,13 +157,13 @@ CMD ["bash"]
 
 **Generate Image and Test**
 ```
-[root@aap-eda container-image]# podman build -f context/Containerfile -t kafka.container.com:latest context
+[root@aap-eda container-image]# podman build -f context/Containerfile -t kafka-03:latest context
 ...
 --> 7cc815659cc
-Successfully tagged localhost/kafka.container.com:latest
+Successfully tagged localhost/kafka-03:latest
 7cc815659ccbcd2c94267b9af82d6af8816cc72ad2a219724644c30fd9da3535
 
-[root@aap-eda container-image]# podman run -p 9092:9092 -p 8080:8080 -ti --name kafka.container.com --hostname kafka.container.com  localhost/kafka.container.com:latest  /bin/bash
+[root@aap-eda container-image]# podman run -p 9092:9092 -p 8080:8080 -ti --name kafka.container.com --hostname kafka.container.com  localhost/kafka-03.com:latest  /bin/bash
 
 bash-5.1$ tmux list-session
 consume: 1 windows (created Fri Jul 21 13:33:38 2023)
@@ -175,23 +171,13 @@ kafka: 1 windows (created Fri Jul 21 13:33:28 2023)
 rulebase: 1 windows (created Fri Jul 21 13:33:41 2023)
 zookeeper: 1 windows (created Fri Jul 21 13:33:16 2023)
 
+bash-5.1$ echo '{"implement": "RuleBase", "init": "True"}' | sed "s/'/\"/g" | /kafka/bin/kafka-console-producer.sh --broker-list 192.168.122.51:9092 --topic aap
+
 bash-5.1$ tmux attach -t consume
 [2023-07-21 12:51:10,584] WARN [Consumer clientId=console-consumer, groupId=console-consumer-89369] Error while fetching metadata with correlation id 2 : {aap=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
 [2023-07-21 12:51:10,758] WARN [Consumer clientId=console-consumer, groupId=console-consumer-89369] Error while fetching metadata with correlation id 4 : {aap=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
-
-
-```
-
-**Send Event to the topic aap**
-```
-[jinzha@event-ansible troubleshoot-01]$ echo '{"implement": "RuleBase", "init": "True"}' | sed "s/'/\"/g" | ~/kafka_2.13-3.3.1/bin/kafka-console-producer.sh --broker-list 192.168.122.51:9092 --topic aap 
-
-[jinzha@event-ansible troubleshoot-01]$ 
-```
-
-**On the consume side inside the container**
-```
-[2023-07-21 12:51:10,584] WARN [Consumer clientId=console-consumer, groupId=console-consumer-89369] Error while fetching metadata with correlation id 2 : {aap=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
-[2023-07-21 12:51:10,758] WARN [Consumer clientId=console-consumer, groupId=console-consumer-89369] Error while fetching metadata with correlation id 4 : {aap=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
 {"implement": "RuleBase", "init": "True"}
+
+
 ```
+
